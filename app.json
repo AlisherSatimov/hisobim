@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "hisobim-app",
-    "slug": "hisobim-app",
+    "name": "Hisobim",
+    "slug": "hisobim",
+    "scheme": "hisobim",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,9 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "uz.hisobim.app"
     },
     "android": {
+      "package": "uz.hisobim.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -25,6 +28,19 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ed0d72e3-cc90-4b31-a4c4-b3ae15b7af8a"
+      }
+    },
+    "owner": "alishersatimov"
   }
 }
