@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabase';
 export type ReportData = {
   totalDebt: number;
   customerCount: number;
-  debtCount: number;
-  paymentCount: number;
+  debtorCount: number;
+  clearedCount: number;
   topDebtors: { id: string; name: string; phone: string | null; total_debt: number }[];
 };
 
@@ -35,8 +35,8 @@ export async function fetchReports(shopId: string): Promise<ReportData> {
   return {
     totalDebt,
     customerCount: customers.length,
-    debtCount: debts.filter(d => d.amount > 0).length,
-    paymentCount: debts.filter(d => d.amount < 0).length,
+    debtorCount: customers.filter(c => c.total_debt > 0).length,
+    clearedCount: customers.filter(c => c.total_debt <= 0).length,
     topDebtors,
   };
 }

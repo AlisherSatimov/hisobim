@@ -10,6 +10,7 @@ export function useDebts(customerId: string) {
     queryKey: DEBTS_KEY(customerId),
     queryFn: () => fetchDebtsByCustomer(customerId),
     enabled: !!customerId,
+    staleTime: 30_000,
   });
 }
 

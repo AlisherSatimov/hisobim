@@ -1,5 +1,6 @@
-import { View, ScrollView, StyleSheet, Alert } from 'react-native';
-import { Text, Button, Divider, ActivityIndicator, Appbar } from 'react-native-paper';
+import { View, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { Text, Button, ActivityIndicator } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router, Stack } from 'expo-router';
 import { useCustomerById, useDeleteCustomer } from '../../src/hooks/useCustomers';
 import { useDebts, useDeleteDebt } from '../../src/hooks/useDebts';
@@ -11,10 +12,14 @@ import { formatAmount } from '../../src/utils/format';
 export default function CustomerDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { activeShop } = useShopStore();
-  const { data: customer, isLoading: customerLoading } = useCustomerById(id);
+  const { data: customer, isLoading: customerLoading } = useCustomerById(id, activeShop?.id);
   const { data: debts = [], isLoading: debtsLoading } = useDebts(id);
   const deleteDebt = useDeleteDebt(id);
   const deleteCustomer = useDeleteCustomer(activeShop?.id ?? '');
+
+  const initials = customer
+    ? customer.name.trim().split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase()
+    : '';
 
   const handleDeleteDebt = (debtId: string) => {
     Alert.alert(
@@ -22,11 +27,7 @@ export default function CustomerDetailScreen() {
       "Bu yozuvni o'chirishni tasdiqlaysizmi?",
       [
         { text: 'Bekor qilish', style: 'cancel' },
-        {
-          text: "O'chirish",
-          style: 'destructive',
-          onPress: () => deleteDebt.mutate(debtId),
-        },
+        { text: "O'chirish", style: 'destructive', onPress: () => deleteDebt.mutate(debtId) },
       ]
     );
   };
@@ -40,100 +41,103 @@ export default function CustomerDetailScreen() {
         {
           text: "O'chirish",
           style: 'destructive',
-          onPress: () => {
-            deleteCustomer.mutate(id, {
-              onSuccess: () => router.back(),
-            });
-          },
+          onPress: () => deleteCustomer.mutate(id, { onSuccess: () => router.back() }),
         },
       ]
     );
   };
 
-  const debtColor = customer && customer.total_debt > 0 ? '#C0392B' : '#27AE60';
+  const debtColor = customer && customer.total_debt > 0 ? '#E53935' : '#43A047';
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: customer?.name ?? 'Mijoz',
+          headerTitleAlign: 'left',
+          headerTitle: () => customer ? (
+            <View style={styles.headerTitle}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{initials}</Text>
+              </View>
+              <View style={styles.headerTexts}>
+                <Text style={styles.headerName} numberOfLines={1}>{customer.name}</Text>
+                {customer.phone ? (
+                  <Text style={styles.headerPhone} numberOfLines={1}>{customer.phone}</Text>
+                ) : null}
+              </View>
+            </View>
+          ) : null,
           headerRight: () => customer ? (
-            <>
-              <Appbar.Action
-                icon="pencil-outline"
-                iconColor="#1B6CA8"
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={styles.headerBtn}
                 onPress={() => router.push({ pathname: '/customer/edit', params: { id } })}
-              />
-              <Appbar.Action
-                icon="delete-outline"
-                iconColor="#C0392B"
+                hitSlop={6}
+              >
+                <Ionicons name="pencil-outline" size={20} color="#1B6CA8" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.headerBtn}
                 onPress={handleDeleteCustomer}
-              />
-            </>
+                hitSlop={6}
+              >
+                <Ionicons name="trash-outline" size={20} color="#E53935" />
+              </TouchableOpacity>
+            </View>
           ) : null,
         }}
       />
+
       {customerLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color="#1B6CA8" />
         </View>
       ) : !customer ? null : (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.avatarWrap}>
-            <Text style={styles.avatarText}>
-              {customer.name.trim().split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase()}
-            </Text>
+        <View style={styles.container}>
+
+          {/* Qarz banneri */}
+          <View style={[styles.debtBanner, { backgroundColor: debtColor }]}>
+            <Text style={styles.debtBannerLabel}>Jami qarz</Text>
+            <Text style={styles.debtBannerAmount}>{formatAmount(customer.total_debt)}</Text>
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.name}>{customer.name}</Text>
-            {customer.phone ? <Text style={styles.phone}>{customer.phone}</Text> : null}
-            {customer.note ? <Text style={styles.note}>{customer.note}</Text> : null}
-          </View>
-          <View style={[styles.debtBox, { backgroundColor: debtColor + '15' }]}>
-            <Text style={styles.debtLabel}>Jami qarz</Text>
-            <Text style={[styles.debtAmount, { color: debtColor }]}>
-              {formatAmount(customer.total_debt)}
-            </Text>
-          </View>
+
+          {/* Ikki ustunli daftar */}
+          <ScrollView contentContainerStyle={styles.list}>
+            {debts.length === 0 && !debtsLoading ? (
+              <EmptyState
+                message="Hali yozuv yo'q"
+                subMessage="Quyidagi tugmani bosing"
+                icon="document-text-outline"
+              />
+            ) : (
+              <View style={styles.columns}>
+                <View style={styles.column}>
+                  <Text style={[styles.colHeader, { color: '#E53935' }]}>Qarz oldi</Text>
+                  {debts.filter(d => d.amount > 0).map(item => (
+                    <DebtItem key={item.id} debt={item} onDelete={() => handleDeleteDebt(item.id)} />
+                  ))}
+                </View>
+                <View style={styles.dividerVertical} />
+                <View style={styles.column}>
+                  <Text style={[styles.colHeader, { color: '#43A047' }]}>To'lov qildi</Text>
+                  {debts.filter(d => d.amount < 0).map(item => (
+                    <DebtItem key={item.id} debt={item} onDelete={() => handleDeleteDebt(item.id)} />
+                  ))}
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          <Button
+            mode="contained"
+            icon="plus"
+            style={styles.addButton}
+            contentStyle={styles.buttonContent}
+            onPress={() => router.push({ pathname: '/debt/add', params: { customerId: id } })}
+          >
+            Yozuv qo'shish
+          </Button>
         </View>
-
-        <Divider />
-
-        <ScrollView contentContainerStyle={styles.list}>
-          {debts.length === 0 && !debtsLoading ? (
-            <EmptyState message="Hali yozuv yo'q" subMessage="Quyidagi tugmani bosing" />
-          ) : (
-            <View style={styles.columns}>
-              <View style={styles.column}>
-                <Text style={[styles.colHeader, { color: '#C0392B' }]}>Qarz oldi</Text>
-                {debts.filter(d => d.amount > 0).map(item => (
-                  <DebtItem key={item.id} debt={item} onDelete={() => handleDeleteDebt(item.id)} />
-                ))}
-              </View>
-              <View style={styles.dividerVertical} />
-              <View style={styles.column}>
-                <Text style={[styles.colHeader, { color: '#27AE60' }]}>To'lov qildi</Text>
-                {debts.filter(d => d.amount < 0).map(item => (
-                  <DebtItem key={item.id} debt={item} onDelete={() => handleDeleteDebt(item.id)} />
-                ))}
-              </View>
-            </View>
-          )}
-        </ScrollView>
-
-        <Button
-          mode="contained"
-          icon="plus"
-          style={styles.addButton}
-          contentStyle={styles.buttonContent}
-          onPress={() =>
-            router.push({ pathname: '/debt/add', params: { customerId: id } })
-          }
-        >
-          Yozuv qo'shish
-        </Button>
-      </View>
       )}
     </>
   );
@@ -142,35 +146,59 @@ export default function CustomerDetailScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F4F6F9' },
   loading: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-    backgroundColor: 'white',
-  },
-  avatarWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+
+  // Nav header
+  headerTitle: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     backgroundColor: '#EBF3FB',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarText: { fontSize: 16, fontWeight: '700', color: '#1B6CA8' },
-  headerInfo: { flex: 1 },
-  name: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
-  phone: { color: '#9CA3AF', marginTop: 2, fontSize: 14 },
-  note: { color: '#9CA3AF', marginTop: 2, fontSize: 13, fontStyle: 'italic' },
-  debtBox: { alignItems: 'flex-end', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8 },
-  debtLabel: { color: '#9CA3AF', fontSize: 11, marginBottom: 2 },
-  debtAmount: { fontSize: 15, fontWeight: '800' },
+  avatarText: { fontSize: 13, fontWeight: '800', color: '#1B6CA8' },
+  headerTexts: { justifyContent: 'center', gap: 1 },
+  headerName: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', lineHeight: 18 },
+  headerPhone: { fontSize: 12, color: '#9CA3AF', lineHeight: 15 },
+  headerActions: { flexDirection: 'row', gap: 4, marginRight: 4 },
+  headerBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#F4F6F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Debt banner
+  debtBanner: {
+    margin: 12,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+  },
+  debtBannerLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 13 },
+  debtBannerAmount: { color: 'white', fontSize: 20, fontWeight: '800' },
+
+  // Columns
   list: { padding: 8, paddingBottom: 100 },
-  emptyList: { flex: 1 },
   columns: { flexDirection: 'row' },
   column: { flex: 1, minWidth: 0 },
-  colHeader: { fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4, paddingHorizontal: 2 },
+  colHeader: {
+    fontSize: 11, fontWeight: '700', marginBottom: 6,
+    textTransform: 'uppercase', letterSpacing: 0.4, paddingHorizontal: 2,
+  },
   dividerVertical: { width: 1, backgroundColor: '#E0E0E0', marginHorizontal: 6 },
-  addButton: { margin: 16, borderRadius: 8, backgroundColor: '#1B6CA8' },
+
+  addButton: { margin: 12, borderRadius: 10, backgroundColor: '#1B6CA8' },
   buttonContent: { height: 52 },
 });

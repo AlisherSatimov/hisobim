@@ -8,7 +8,7 @@ import { useShopStore } from '../../src/stores/shop.store';
 export default function CustomerEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { activeShop } = useShopStore();
-  const { data: customer } = useCustomerById(id);
+  const { data: customer } = useCustomerById(id, activeShop?.id);
   const updateCustomer = useUpdateCustomer(activeShop?.id ?? '', id);
 
   const [name, setName] = useState(customer?.name ?? '');

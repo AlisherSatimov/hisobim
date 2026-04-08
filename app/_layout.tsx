@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { StatusBar } from 'expo-status-bar';
 import { supabase } from '../src/lib/supabase';
 import { useAuthStore } from '../src/stores/auth.store';
 
@@ -45,7 +46,15 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={hisobimTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{
+          headerShown: false,
+          headerStyle: { backgroundColor: 'white' },
+          headerTitleStyle: { fontWeight: '700', fontSize: 17, color: '#1A1A2E' },
+          headerTintColor: '#1B6CA8',
+          headerShadowVisible: false,
+          headerBackTitle: '',
+        }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/verify" options={{ headerShown: false }} />

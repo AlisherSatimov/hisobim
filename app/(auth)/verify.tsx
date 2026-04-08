@@ -6,11 +6,13 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput, Button, Text, HelperText } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import { otpSchema } from '../../src/utils/validation';
 import { verifyOtp } from '../../src/services/auth.service';
 
@@ -21,11 +23,7 @@ export default function VerifyScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>({
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(otpSchema),
     defaultValues: { otp: '' },
   });
@@ -44,77 +42,117 @@ export default function VerifyScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.flex} edges={['top']}>
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text variant="headlineMedium" style={styles.title}>
-          SMS kodni kiriting
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          {phone} raqamiga 6 xonali kod yuborildi
-        </Text>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <StatusBar style="light" />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
-        <Controller
-          control={control}
-          name="otp"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              label="Tasdiqlash kodi"
-              placeholder="123456"
-              keyboardType="number-pad"
-              maxLength={6}
-              value={value}
-              onChangeText={onChange}
-              error={!!errors.otp}
-              style={styles.input}
-              mode="outlined"
+          {/* Brand section */}
+          <View style={styles.brand}>
+            <View style={styles.iconWrap}>
+              <Ionicons name="shield-checkmark-outline" size={36} color="white" />
+            </View>
+            <Text style={styles.title}>Tasdiqlash</Text>
+            <Text style={styles.subtitle}>{phone} raqamiga{'\n'}6 xonali kod yuborildi</Text>
+          </View>
+
+          {/* Form card */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Kodni kiriting</Text>
+
+            <Controller
+              control={control}
+              name="otp"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  label="Tasdiqlash kodi"
+                  placeholder="123456"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  value={value}
+                  onChangeText={onChange}
+                  error={!!errors.otp}
+                  style={styles.input}
+                  mode="outlined"
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#1B6CA8"
+                />
+              )}
             />
-          )}
-        />
-        <HelperText type="error" visible={!!errors.otp}>
-          {errors.otp?.message}
-        </HelperText>
+            <HelperText type="error" visible={!!errors.otp}>
+              {errors.otp?.message}
+            </HelperText>
 
-        {errorMsg ? (
-          <HelperText type="error" visible>
-            {errorMsg}
-          </HelperText>
-        ) : null}
+            {errorMsg ? (
+              <HelperText type="error" visible>{errorMsg}</HelperText>
+            ) : null}
 
-        <Button
-          mode="contained"
-          onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-          disabled={isLoading}
-          style={styles.button}
-          contentStyle={styles.buttonContent}
-        >
-          Kirish
-        </Button>
+            <Button
+              mode="contained"
+              onPress={handleSubmit(onSubmit)}
+              loading={isLoading}
+              disabled={isLoading}
+              style={styles.button}
+              contentStyle={styles.buttonContent}
+              buttonColor="#1B6CA8"
+            >
+              Kirish
+            </Button>
 
-        <Button
-          mode="text"
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          Orqaga
-        </Button>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Button
+              mode="text"
+              onPress={() => router.back()}
+              style={styles.backButton}
+              textColor="#9CA3AF"
+            >
+              ← Orqaga
+            </Button>
+          </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: 'white' },
-  container: { flexGrow: 1, padding: 24, justifyContent: 'center' },
-  title: { textAlign: 'center', marginBottom: 8, fontWeight: 'bold' },
-  subtitle: { textAlign: 'center', marginBottom: 32, color: '#666' },
-  input: { fontSize: 22, textAlign: 'center' },
-  button: { marginTop: 8, borderRadius: 8 },
+  safe: { flex: 1, backgroundColor: '#1B6CA8' },
+  flex: { flex: 1 },
+  scroll: { flexGrow: 1 },
+
+  brand: {
+    alignItems: 'center',
+    paddingTop: 48,
+    paddingBottom: 40,
+    backgroundColor: '#1B6CA8',
+  },
+  iconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  title: { fontSize: 28, fontWeight: '800', color: 'white' },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 8, textAlign: 'center', lineHeight: 20 },
+
+  card: {
+    flex: 1,
+    backgroundColor: 'white',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 28,
+    paddingTop: 32,
+  },
+  cardTitle: { fontSize: 22, fontWeight: '700', color: '#1A1A2E', marginBottom: 20 },
+
+  input: { backgroundColor: 'white', fontSize: 24, textAlign: 'center' },
+  button: { marginTop: 8, borderRadius: 10 },
   buttonContent: { height: 52 },
   backButton: { marginTop: 8 },
 });

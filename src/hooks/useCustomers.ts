@@ -6,7 +6,7 @@ import {
   updateCustomer,
   deleteCustomer,
 } from '../services/customer.service';
-import type { CreateCustomerPayload, UpdateCustomerPayload } from '../types';
+import type { CreateCustomerPayload, Customer, UpdateCustomerPayload } from '../types';
 
 export const CUSTOMERS_KEY = (shopId: string) => ['customers', shopId] as const;
 export const CUSTOMER_KEY  = (id: string)     => ['customer',  id]     as const;
@@ -19,11 +19,18 @@ export function useCustomers(shopId: string) {
   });
 }
 
-export function useCustomerById(id: string) {
+export function useCustomerById(id: string, shopId?: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: CUSTOMER_KEY(id),
     queryFn: () => fetchCustomerById(id),
     enabled: !!id,
+    staleTime: 30_000,
+    placeholderData: () => {
+      if (!shopId) return undefined;
+      const list = queryClient.getQueryData<Customer[]>(CUSTOMERS_KEY(shopId));
+      return list?.find(c => c.id === id);
+    },
   });
 }
 
