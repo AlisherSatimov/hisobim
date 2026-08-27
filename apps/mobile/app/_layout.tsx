@@ -59,7 +59,7 @@ export default function RootLayout() {
         }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="(auth)/login" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)/verify" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)/register" options={{ headerShown: false }} />
           <Stack.Screen name="customer/[id]" options={{ headerShown: true }} />
           <Stack.Screen name="customer/add" options={{ headerShown: true, title: "Mijoz qo'shish" }} />
           <Stack.Screen name="debt/add" options={{ headerShown: true, title: "Yozuv qo'shish" }} />

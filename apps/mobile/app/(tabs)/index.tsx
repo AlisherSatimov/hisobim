@@ -23,7 +23,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!user || activeShop) return;
-    fetchOrCreateShop(user.id, user.phone ?? null).then(setShop);
+    fetchOrCreateShop(user.id).then(setShop);
   }, [user, activeShop]);
 
   const filtered: Customer[] = customers.filter(

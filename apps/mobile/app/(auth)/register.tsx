@@ -14,25 +14,44 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { loginSchema, signIn, authErrorMessage } from '@hisobim/shared';
+import { signUpSchema, signUp, authErrorMessage, useShopStore } from '@hisobim/shared';
 
-type FormData = { email: string; password: string };
+type FormData = {
+  shopName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [infoMsg, setInfoMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const setShop = useShopStore((s) => s.setShop);
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { shopName: '', email: '', password: '', confirmPassword: '' },
   });
 
-  const onSubmit = async ({ email, password }: FormData) => {
+  const onSubmit = async ({ shopName, email, password }: FormData) => {
     setIsLoading(true);
     setErrorMsg('');
+    setInfoMsg('');
     try {
-      await signIn(email.trim(), password);
+      const { session, shop } = await signUp(email.trim(), password, shopName.trim());
+
+      // Sessiya yo'q = Supabase'da email tasdiqlash yoqilgan. Bunda do'kon ham
+      // yaratilmagan, foydalanuvchi pochtasini tasdiqlab, keyin kirishi kerak.
+      if (!session) {
+        setInfoMsg(
+          "Hisob yaratildi. Pochtangizga yuborilgan xatni tasdiqlab, keyin kiring."
+        );
+        return;
+      }
+
+      setShop(shop);
       router.replace('/(tabs)/');
     } catch (err) {
       setErrorMsg(authErrorMessage(err));
@@ -53,7 +72,7 @@ export default function LoginScreen() {
           {/* Brand section */}
           <View style={styles.brand}>
             <View style={styles.iconWrap}>
-              <Ionicons name="receipt-outline" size={36} color="white" />
+              <Ionicons name="storefront-outline" size={36} color="white" />
             </View>
             <Text style={styles.appName}>Hisobim</Text>
             <Text style={styles.tagline}>Do'koningiz uchun raqamli daftar</Text>
@@ -61,8 +80,29 @@ export default function LoginScreen() {
 
           {/* Form card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Kirish</Text>
-            <Text style={styles.cardSub}>Email va parolingizni kiriting</Text>
+            <Text style={styles.cardTitle}>Ro'yxatdan o'tish</Text>
+            <Text style={styles.cardSub}>Do'koningiz uchun hisob yarating</Text>
+
+            <Controller
+              control={control}
+              name="shopName"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  label="Do'kon nomi"
+                  placeholder="Baraka do'koni"
+                  value={value}
+                  onChangeText={onChange}
+                  error={!!errors.shopName}
+                  style={styles.input}
+                  mode="outlined"
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#1B6CA8"
+                />
+              )}
+            />
+            <HelperText type="error" visible={!!errors.shopName}>
+              {errors.shopName?.message}
+            </HelperText>
 
             <Controller
               control={control}
@@ -96,7 +136,7 @@ export default function LoginScreen() {
                   label="Parol"
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
-                  autoComplete="password"
+                  autoComplete="new-password"
                   value={value}
                   onChangeText={onChange}
                   error={!!errors.password}
@@ -117,8 +157,34 @@ export default function LoginScreen() {
               {errors.password?.message}
             </HelperText>
 
+            <Controller
+              control={control}
+              name="confirmPassword"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  label="Parolni tasdiqlang"
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoComplete="new-password"
+                  value={value}
+                  onChangeText={onChange}
+                  error={!!errors.confirmPassword}
+                  style={styles.input}
+                  mode="outlined"
+                  outlineColor="#E5E7EB"
+                  activeOutlineColor="#1B6CA8"
+                />
+              )}
+            />
+            <HelperText type="error" visible={!!errors.confirmPassword}>
+              {errors.confirmPassword?.message}
+            </HelperText>
+
             {errorMsg ? (
               <HelperText type="error" visible>{errorMsg}</HelperText>
+            ) : null}
+            {infoMsg ? (
+              <HelperText type="info" visible>{infoMsg}</HelperText>
             ) : null}
 
             <Button
@@ -130,16 +196,16 @@ export default function LoginScreen() {
               contentStyle={styles.buttonContent}
               buttonColor="#1B6CA8"
             >
-              Kirish
+              Ro'yxatdan o'tish
             </Button>
 
             <Pressable
-              onPress={() => router.push('/(auth)/register')}
+              onPress={() => router.back()}
               disabled={isLoading}
               style={styles.linkWrap}
             >
               <Text style={styles.linkText}>
-                Hisobingiz yo'qmi? <Text style={styles.linkAccent}>Ro'yxatdan o'ting</Text>
+                Hisobingiz bormi? <Text style={styles.linkAccent}>Kiring</Text>
               </Text>
             </Pressable>
           </View>
@@ -157,8 +223,8 @@ const styles = StyleSheet.create({
 
   brand: {
     alignItems: 'center',
-    paddingTop: 48,
-    paddingBottom: 40,
+    paddingTop: 40,
+    paddingBottom: 32,
     backgroundColor: '#1B6CA8',
   },
   iconWrap: {

@@ -1,20 +1,33 @@
 import { z } from 'zod';
 
-export const phoneSchema = z
+const emailSchema = z
   .string()
-  .min(9, "Telefon raqam kamida 9 ta raqamdan iborat bo'lishi kerak")
-  .regex(/^\+?[0-9\s\-()]+$/, "Telefon raqam noto'g'ri formatda");
+  .min(1, "Email manzilni kiriting")
+  .email("Email manzil noto'g'ri formatda");
+
+const passwordSchema = z
+  .string()
+  .min(6, "Parol kamida 6 ta belgidan iborat bo'lishi kerak");
 
 export const loginSchema = z.object({
-  phone: phoneSchema,
+  email: emailSchema,
+  password: passwordSchema,
 });
 
-export const otpSchema = z.object({
-  otp: z
-    .string()
-    .length(6, "Tasdiqlash kodi 6 ta raqamdan iborat bo'lishi kerak")
-    .regex(/^\d+$/, "Tasdiqlash kodi faqat raqamlardan iborat bo'lishi kerak"),
-});
+export const signUpSchema = z
+  .object({
+    shopName: z
+      .string()
+      .min(2, "Do'kon nomi kamida 2 ta belgidan iborat bo'lishi kerak")
+      .max(100, "Do'kon nomi 100 ta belgidan oshmasligi kerak"),
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "Parolni tasdiqlang"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Parollar mos kelmadi",
+    path: ['confirmPassword'],
+  });
 
 export const addCustomerSchema = z.object({
   name: z

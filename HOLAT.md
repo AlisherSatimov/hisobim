@@ -24,8 +24,8 @@ Noldan yozilmadi — mavjud `hisobim` (do'kon qarz daftari, Expo + Supabase) mon
 | № | Bosqich | Holat |
 |---|---------|-------|
 | 1 | Monorepo + `@hisobim/shared` paketi | ✅ tugadi (`24341ab`) |
-| 2 | Auth: SMS OTP → email + parol | ⬜ keyingi |
-| 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ⬜ |
+| 2 | Auth: SMS OTP → email + parol | ✅ tugadi |
+| 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ⬜ keyingi |
 | 4 | Mobil: offline kesh + outbox + offline banner | ⬜ |
 | 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ⬜ |
 | 6 | Testlar + GitHub Actions CI | ⬜ |
@@ -48,6 +48,17 @@ Ikkita texnik qaror, ularni bilmasdan kodni o'qish qiyin:
 1. **Client lazy proxy.** Servislar `supabase` ni ko'p qatorli zanjirda ishlatadi, shuning uchun `packages/shared/src/client.ts` da `supabase` Proxy sifatida eksport qilinadi — har murojaatda haqiqiy clientni oladi. Servis kodlariga tegilmadi, faqat import yo'li o'zgardi.
 
 2. **Alohida `./init` kirish nuqtasi.** Zustand store'lari yaratilishi bilan saqlash adapterini so'raydi, ya'ni `initHisobim()` ulardan oldin bajarilishi shart. Barrel (`index.ts`) store'larni ham yuklagani uchun init `@hisobim/shared/init` dan import qilinadi. Mobil tomonda `apps/mobile/init.ts` → `app/_layout.tsx` ning eng birinchi importi. **Veb tomonda ham xuddi shu tartib kerak bo'ladi** (`main.tsx` da eng birinchi).
+
+## 2-bosqichda nima qilindi
+
+Auth telefon + SMS OTP dan email + parolga o'tkazildi (Supabase SMS uchun pullik provayder talab qiladi, baholovchi jonli havolada sinay olmaydi).
+
+- `auth.service.ts`: `signUp(email, password, shopName)` · `signIn(email, password)` · `authErrorMessage(err)` — Supabase inglizcha xatosi hech qachon ekranga chiqmaydi.
+- `signUp` ro'yxatdan o'tgach darhol do'kon yaratadi (`createShop`), chunki ilova `activeShop`siz ishlamaydi.
+- Mobil: `(auth)/verify.tsx` o'chdi, `(auth)/register.tsx` qo'shildi.
+- `normalizeUzbekPhone` o'chirildi — u faqat auth'da ishlatilgan edi.
+
+**Ochiq:** Supabase dashboard'da Authentication → Email → "Confirm email" o'chirilishi kerak, aks holda baholovchi tasdiqlash xatini kutadi. Kod ikkala holatga chidamli: sessiya qaytmasa register ekrani "pochtangizni tasdiqlang" deydi.
 
 ## Boshqa mashinada boshlash
 
