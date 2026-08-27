@@ -66,3 +66,31 @@ Faqat sessiyasi bor foydalanuvchi ilova sahifalariga kira olsin — himoyalangan
 Pul summalari va sanalar `@hisobim/shared` dagi `formatAmount` / `formatDate` orqali chiqsin — veb'da alohida formatlash yozma.
 
 Tugagach `npm run typecheck` toza o'tsin va `npm run build:web` xatosiz qurilsin. Dev serverni ishga tushirib o'zing tekshirma — men o'zim sinab ko'raman, tayyor bo'lganda ayt. Push qilma.
+
+---
+
+## 4. Mobil: offline rejim
+
+Mobil ilova offline ishlashi kerak. Sabab rollardan kelib chiqadi: sotuvchi do'konda telefonda qarz yozadi, do'kon podvalida yoki bozorda internet uzilib turadi. Yozuv yo'qolsa ilovaning ma'nosi qolmaydi. Veb tomonda bu shart emas — u ofisdagi tahlil qurilmasi, u yerda faqat "aloqa yo'q" bannerini ko'rsatish kifoya (3-bosqichda qilingan).
+
+Hozirgi holat: `apps/mobile/app/_layout.tsx` da `QueryClient` `staleTime: 0` bilan yaratilgan va hech qanday persister yo'q — ilova yopilsa kesh yo'qoladi, internet bo'lmasa ekranlar bo'sh qoladi. Tarmoq holatini aniqlaydigan kod ham yo'q (`netinfo` o'rnatilmagan).
+
+Uch qismdan iborat:
+
+**1. Kesh saqlanadigan bo'lsin.** `@tanstack/react-query-persist-client` va AsyncStorage persister'ini ulа, `staleTime` ni mazmunli qiymatga ko'tar (masalan 5 daqiqa) va `gcTime` keshni saqlash muddatidan uzun bo'lsin. Maqsad: internetsiz ochilganda mijozlar ro'yxati va yozuvlar oxirgi holatida ko'rinsin. `onlineManager` ni netinfo bilan bog'la — React Query tarmoq qaytganda o'zi qayta so'rov yuborsin.
+
+**2. Outbox — offline yozuvlar navbati.** Bu bosqichning asosiy qismi. Internetsiz paytda qo'shilgan qarz/to'lov yozuvi va yangi mijoz yo'qolmasin: navbatga tushsin, aloqa qaytganda avtomatik yuborilsin.
+
+- Navbat `packages/shared` da zustand store sifatida yozilsin va saqlansin (`persist`, mavjud store'lar bilan bir xil uslubda) — shunda ilova yopilib qayta ochilsa ham navbat joyida qoladi.
+- Har element: turi (mijoz yoki yozuv), yuborilishi kerak bo'lgan payload, yaratilgan vaqti, urinishlar soni.
+- Aloqa qaytganda navbat tartib bilan yuborilsin. Muvaffaqiyatda element o'chsin va tegishli query'lar `invalidate` qilinsin.
+- **Xatolarni ajrat:** tarmoq xatosi = keyin qayta urinamiz, element navbatda qoladi; server rad etgan bo'lsa (masalan RLS yoki validatsiya xatosi) qayta urinishning ma'nosi yo'q — elementni "xato" holatiga o'tkaz va foydalanuvchiga ko'rsat. Cheksiz aylanma bo'lmasin.
+- Foydalanuvchi navbatdagi yozuvni ekranda ko'rsin — ro'yxatda "yuborilmagan" belgisi bilan, yoki bannerda "3 ta yozuv yuborilmagan" ko'rinishida. Sotuvchi nima saqlanmaganini bilishi shart.
+
+**3. Offline banner.** Ilovaning yuqorisida, barcha ekranlarda. Aloqa yo'qligini va navbatda nechta yozuv turganini ko'rsatsin. Veb tomondagi banner bilan bir xil ohangda, mobil dizayn tilida (`#E8A020` aksent rangi).
+
+Muhim: outbox mantig'i `packages/shared` da bo'lsin, `apps/mobile` da emas — u platformaga bog'liq emas va veb keyinchalik xohlasa ishlata oladi. Lekin netinfo mobilga xos, shuning uchun tarmoq holati shared'ga tashqaridan uzatilsin (init paytida yoki funksiya argumenti sifatida) — shared kod hech qachon `@react-native-community/netinfo` ni import qilmasin, bu 1-bosqichdagi qoidaning davomi.
+
+Mavjud hooklar (`useCreateDebt`, `useCreateCustomer`) chaqiruv joyidan qaraganda o'zgarmasin — ekran kodi "offline bo'lsa navbatga qo'y" degan shartni bilmasin, buni ma'lumot qatlami hal qilsin.
+
+Yangi paket o'rnatishing kerak bo'ladi (`@tanstack/react-query-persist-client`, `@react-native-community/netinfo` va persister). Expo bilan mos versiyani tanla — `npx expo install` ishlat. Tugagach `npm run typecheck` toza o'tsin. Ilovani o'zing ishga tushirib sinama — men Expo'da sinab ko'raman. Push qilma.
