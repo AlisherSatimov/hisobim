@@ -44,3 +44,11 @@ yarn-error.*
 .env.development
 .env.production
 build-logs.txt
+
+# Environment (barcha variantlar)
+.env
+.env.*
+!.env.example
+
+# Web build
+apps/web/dist/

@@ -1,37 +1,19 @@
 {
-  "name": "hisobim-app",
+  "name": "hisobim",
   "version": "1.0.0",
-  "main": "expo-router/entry",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
-    "web": "expo start --web"
-  },
-  "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
-    "@react-native-async-storage/async-storage": "^2.2.0",
-    "@supabase/supabase-js": "^2.101.1",
-    "@tanstack/react-query": "^5.96.2",
-    "expo": "~54.0.33",
-    "expo-constants": "~18.0.13",
-    "expo-linking": "~8.0.11",
-    "expo-router": "~6.0.23",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-hook-form": "^7.72.1",
-    "react-native": "0.81.5",
-    "react-native-paper": "^5.15.0",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
-    "react-native-url-polyfill": "^3.0.0",
-    "react-native-vector-icons": "^10.3.0",
-    "zod": "^4.3.6",
-    "zustand": "^5.0.12"
+    "mobile": "npm run start --workspace=@hisobim/mobile",
+    "web": "npm run dev --workspace=@hisobim/web",
+    "build:web": "npm run build --workspace=@hisobim/web",
+    "test": "npm run test --workspace=@hisobim/shared",
+    "typecheck": "npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
-    "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
-  },
-  "private": true
+  }
 }
