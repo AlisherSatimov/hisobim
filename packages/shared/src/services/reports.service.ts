@@ -9,22 +9,17 @@ export type ReportData = {
 };
 
 export async function fetchReports(shopId: string): Promise<ReportData> {
-  const [customersRes, debtsRes] = await Promise.all([
-    supabase
-      .from('customers')
-      .select('id, name, phone, total_debt')
-      .eq('shop_id', shopId),
-    supabase
-      .from('debts')
-      .select('amount')
-      .eq('shop_id', shopId),
-  ]);
+  // Barcha ko'rsatkichlar `customers.total_debt` dan hisoblanadi — bu ustunni
+  // baza trigger'i yangilab turadi, shuning uchun `debts` jadvalini alohida
+  // so'rashning hojati yo'q.
+  const customersRes = await supabase
+    .from('customers')
+    .select('id, name, phone, total_debt')
+    .eq('shop_id', shopId);
 
   if (customersRes.error) throw customersRes.error;
-  if (debtsRes.error) throw debtsRes.error;
 
   const customers = customersRes.data ?? [];
-  const debts = debtsRes.data ?? [];
 
   const totalDebt = customers.reduce((sum, c) => sum + (c.total_debt ?? 0), 0);
   const topDebtors = [...customers]

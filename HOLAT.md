@@ -25,8 +25,8 @@ Noldan yozilmadi — mavjud `hisobim` (do'kon qarz daftari, Expo + Supabase) mon
 |---|---------|-------|
 | 1 | Monorepo + `@hisobim/shared` paketi | ✅ tugadi (`24341ab`) |
 | 2 | Auth: SMS OTP → email + parol | ✅ tugadi |
-| 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ⬜ keyingi |
-| 4 | Mobil: offline kesh + outbox + offline banner | ⬜ |
+| 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ✅ tugadi |
+| 4 | Mobil: offline kesh + outbox + offline banner | ⬜ keyingi |
 | 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ⬜ |
 | 6 | Testlar + GitHub Actions CI | ⬜ |
 | 7 | Deploy (Vercel + EAS), README, demo video | ⬜ |
@@ -59,6 +59,20 @@ Auth telefon + SMS OTP dan email + parolga o'tkazildi (Supabase SMS uchun pullik
 - `normalizeUzbekPhone` o'chirildi — u faqat auth'da ishlatilgan edi.
 
 **Ochiq:** Supabase dashboard'da Authentication → Email → "Confirm email" o'chirilishi kerak, aks holda baholovchi tasdiqlash xatini kutadi. Kod ikkala holatga chidamli: sessiya qaytmasa register ekrani "pochtangizni tasdiqlang" deydi.
+
+## 3-bosqichda nima qilindi
+
+`apps/web/` noldan qurildi (1-bosqichda faqat root skriptlari yozilgan edi, papkaning o'zi yo'q edi): Vite + React + react-router-dom, stil bitta `src/styles/global.css` da.
+
+Ekranlar: login · register · dashboard (4 ko'rsatkich + top-5 qarzdor) · mijozlar jadvali (qidiruv, qo'shish/tahrirlash) · mijoz detali (yozuvlar tarixi, yozuv qo'shish). Har birida loading / empty / error ishlangan, offline banner `useOnline` orqali butun ilovada.
+
+Veb yangi ma'lumot funksiyasi qo'shmaydi — `@hisobim/shared` dagi mavjud hooklardan ishlaydi ("ikki platforma bitta API dan" mezoni).
+
+Yo'l-yo'lakay topilgan: `fetchReports` `debts` jadvalini so'rab, natijasini ishlatmasdi — o'lik so'rov olib tashlandi, ko'rsatkichlar `customers.total_debt` dan hisoblanadi (uni trigger yangilaydi).
+
+Ikki joy kelishuv bo'yicha mobil bilan bir xil: to'lov manfiy summa, qarz musbat; `initHisobim()` `main.tsx` ning eng birinchi importi.
+
+**Ochiq:** mijozlar jadvalidagi "Qo'shilgan" ustuni — "oxirgi yozuv sanasi" ko'rsatilishi kerak edi, lekin `Customer` tipida bu maydon yo'q va uni olish shared'ga yangi so'rov qo'shishni talab qiladi.
 
 ## Boshqa mashinada boshlash
 
