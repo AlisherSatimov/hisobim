@@ -131,3 +131,27 @@ Servislar va Supabase so'rovlari mock qilinsin, haqiqiy bazaga chiqilmasin.
 Keyin GitHub Actions workflow qo'sh: har push va PR da `npm ci`, `npm run typecheck`, `npm test`, `npm run build:web`. Node 22 ishlatilsin (`.nvmrc` bilan bir xil). Veb build uchun `.env` kerak bo'lsa, sir bo'lmagan qiymatlarni workflow ichida bersan bo'ladi (publishable key baribir klientda ochiq), lekin repo sirlariga tayanma.
 
 Murakkablashtirma — maqsad ishlaydigan, o'tadigan test to'plami va yashil CI. Tugagach `npm test` va `npm run typecheck` toza o'tsin. Push qilma.
+
+---
+
+## 7. Deploy va README
+
+Oxirgi bosqich — topshirish uchun kerak bo'lgan narsalar. Demo video kerak emas.
+
+**README.md** (repo'da hali yo'q, noldan yoziladi). Bu topshiriqni baholovchi birinchi o'qiydigan hujjat, shuning uchun u savollarga javob bersin, kod strukturasini takrorlamasin:
+
+- Loyiha nima qilishi va nega ikki platforma — mobil kiritish uchun (sotuvchi, offline ham), veb tahlil uchun (ega, hisobot). Bu sun'iy takror emas, real stsenariy ekani ko'rinsin.
+- **Ochiq aytilsin:** bu avvalgi shaxsiy loyiham, 7 soatda ikki platformali tizimga aylantirdim. Git tarixi yashirilmaydi. Nima tayyor edi (ma'lumot modeli, CRUD, RLS, mobil ekranlar) va nima shu topshiriqda qo'shildi.
+- "Ikki platforma bitta API dan" qanday ta'minlangani — `packages/shared` qatlami, ikkala klient bir xil servis va hooklarni chaqiradi.
+- Ishga tushirish yo'riqnomasi: Node 22, `npm install`, `.env` yaratish, `npm run web` / `npm run mobile`, `npm test`.
+- Jonli veb havolasi va sinash uchun ko'rsatma (baholovchi o'zi ro'yxatdan o'tadi).
+- **Xavfsizlik bo'limi:** 5-bosqichda topilgan va tuzatilgan kamchiliklar ro'yxati sabablari bilan, hamda ataylab qoldirilganlar (npm audit, funksiya EXECUTE huquqi) — nega qoldirilgani izohlansin.
+- Arxitektura qarorlari qisqacha: lazy client proxy, alohida `./init` kirish nuqtasi, outbox xato ajratishi.
+
+`HOLAT.md` vaqtinchalik fayl edi — kerakli qismlari README ga singdirilgach o'chirilsin. `PROMPTS.md` qoladi, u topshirish tarkibiga kiradi.
+
+**Deploy.** Veb ilova Vercel'ga chiqarilsin: root `hisobim`, build `npm run build:web`, output `apps/web/dist`, muhit o'zgaruvchilari `VITE_SUPABASE_URL` va `VITE_SUPABASE_ANON_KEY`. Deploy qilishdan oldin menga ayt.
+
+Mobil uchun EAS build hozir shart emas — Expo Go orqali ko'rsatiladi, README da shu yozilsin.
+
+Tugagach jonli havolani tekshir va README dagi havolani yangila.
