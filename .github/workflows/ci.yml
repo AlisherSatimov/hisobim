@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    env:
+      # Publishable key klientda baribir ochiq bo'ladi — sir emas.
+      # Bu yerda faqat veb build o'tishi uchun kerak.
+      VITE_SUPABASE_URL: https://ttgmhrrrrcmaaohwfwwo.supabase.co
+      VITE_SUPABASE_ANON_KEY: sb_publishable_NmhvXhWiKR01ejjP0Wn9dA_bI0HTTuq
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Testlar
+        run: npm test
+
+      - name: Veb build
+        run: npm run build:web

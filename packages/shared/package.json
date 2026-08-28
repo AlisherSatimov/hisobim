@@ -11,7 +11,8 @@
     "./storage": "./src/storage.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.11"
   }
 }

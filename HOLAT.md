@@ -28,8 +28,8 @@ Noldan yozilmadi — mavjud `hisobim` (do'kon qarz daftari, Expo + Supabase) mon
 | 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ✅ tugadi |
 | 4 | Mobil: offline kesh + outbox + offline banner | ✅ tugadi |
 | 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ✅ tugadi |
-| 6 | Testlar + GitHub Actions CI | ⬜ keyingi |
-| 7 | Deploy (Vercel + EAS), README, demo video | ⬜ |
+| 6 | Testlar + GitHub Actions CI | ✅ tugadi |
+| 7 | Deploy (Vercel + EAS), README, demo video | ⬜ keyingi |
 
 Har bosqich uchun avval `PROMPTS.md` ga prompt yoziladi, keyin shu prompt bajariladi.
 
@@ -88,6 +88,16 @@ Yo'l-yo'lakay: veb `init.ts` ga ham `setOnline` ulandi — bo'lmasa shared qatla
 
 **Ochiq:** navbatdagi yozuvlar ro'yxatlarda ko'rinmaydi, faqat bannerdagi sonda (optimistik ko'rsatish React Query keshiga soxta yozuv qo'shishni talab qiladi).
 
+## 6-bosqichda nima qilindi
+
+`packages/shared` da Vitest — 23 ta test, 3 fayl (`src/__tests__/`): validatsiya sxemalari, `formatAmount`/`formatDate`, va outbox xato ajratishi. Servislar mock qilinadi, haqiqiy bazaga chiqilmaydi.
+
+Eng qimmatlisi — outbox testlari: tarmoq xatosi elementni navbatda qoldirishi, Postgres kodli xato esa "xato" holatiga o'tkazishi va qayta yuborilmasligi.
+
+`.github/workflows/ci.yml` — har push va PR da `npm ci` → `typecheck` → `test` → `build:web`, Node versiyasi `.nvmrc` dan. Veb build uchun publishable key workflow ichida (u klientda baribir ochiq, sir emas).
+
+Ishga tushirish: `npm test` (root'dan).
+
 ## Boshqa mashinada boshlash
 
 ```bash
@@ -114,7 +124,7 @@ Node 22 kerak (`.nvmrc` da yozilgan).
 
 Loyiha bepul tarifda — **7 kun ishlatilmasa avtomatik pauzaga tushadi**. Pauzada bo'lsa Supabase dashboard'dan yoki Claude orqali tiklanadi, ma'lumot yo'qolmaydi. 2026-08-27 da pauzadan tiklandi.
 
-Jadvallar: `shops` · `customers` · `debts` · `shop_users` · `profiles`. Hozir hammasi bo'sh.
+Jadvallar: `shops` · `customers` · `debts`. Hozir hammasi bo'sh. (`shop_users` va `profiles` 5-bosqichda olib tashlandi.)
 
 `supabase/seed.sql` — 18 mijoz va ~50 qarz/to'lov yozuvi bilan demo ma'lumot. Ro'yxatdan o'tib, do'kon yaratilgandan keyin ishga tushiriladi (u mavjud `shops` yozuvini topib ishlatadi).
 

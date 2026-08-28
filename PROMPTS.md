@@ -113,3 +113,21 @@ Ma'lum kamchiliklar:
 Migratsiya fayli va jonli baza bir-biriga mos bo'lishi kerak. `supabase/migration.sql` ni yangi holatga moslab yangila (u noldan qurish uchun yagona manba), o'zgarishlarni jonli bazaga ham qo'lla. **Jonli bazaga tegishdan oldin menga ayt** — nima o'zgarishini ko'rsat, keyin qo'llaymiz.
 
 Tugagach advisor'ni qayta ishga tushir va nima yopilgani, nima ochiq qolgani (va nega) ro'yxat qilib ber. Push qilma.
+
+---
+
+## 6. Testlar va CI
+
+Baholash mezonlaridan biri — "testlar mavjud va o'tadi". Ko'p test kerak emas, mantiqning eng muhim joylari qoplansin.
+
+`packages/shared` da Vitest o'rnat (`npm test` skripti root'da allaqachon shu paketga qaratilgan). Nimani test qil:
+
+- **Validatsiya sxemalari** — `loginSchema`, `signUpSchema` (parol tasdig'i mos kelmasa xato berishi), `addCustomerSchema`, `addDebtSchema`.
+- **`formatAmount` / `formatDate`** — manfiy summa, nol, joriy yil va o'tgan yil sanalari.
+- **Outbox xato ajratish** — bu eng qimmatli test: tarmoq xatosi navbatda qoldirishi, Postgres kodli xato esa elementni "xato" holatiga o'tkazishi. Busiz navbat cheksiz aylanishi mumkin edi.
+
+Servislar va Supabase so'rovlari mock qilinsin, haqiqiy bazaga chiqilmasin.
+
+Keyin GitHub Actions workflow qo'sh: har push va PR da `npm ci`, `npm run typecheck`, `npm test`, `npm run build:web`. Node 22 ishlatilsin (`.nvmrc` bilan bir xil). Veb build uchun `.env` kerak bo'lsa, sir bo'lmagan qiymatlarni workflow ichida bersan bo'ladi (publishable key baribir klientda ochiq), lekin repo sirlariga tayanma.
+
+Murakkablashtirma — maqsad ishlaydigan, o'tadigan test to'plami va yashil CI. Tugagach `npm test` va `npm run typecheck` toza o'tsin. Push qilma.
