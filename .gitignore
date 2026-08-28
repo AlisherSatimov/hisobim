@@ -52,3 +52,7 @@ build-logs.txt
 
 # Web build
 apps/web/dist/
+
+# expo prebuild natijasi (lokal APK build uchun, repo ga kerak emas)
+apps/mobile/android/
+apps/mobile/ios/
