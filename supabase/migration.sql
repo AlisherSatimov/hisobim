@@ -53,17 +53,9 @@ create table public.debts (
 create index idx_debts_customer_id on public.debts(customer_id);
 create index idx_debts_shop_id     on public.debts(shop_id);
 
--- ============================================================
--- TABLE: shop_users (keyingi faza uchun, hozir scaffold)
--- ============================================================
-create table public.shop_users (
-  id          uuid primary key default uuid_generate_v4(),
-  shop_id     uuid not null references public.shops(id) on delete cascade,
-  user_id     uuid not null references auth.users(id) on delete cascade,
-  role        text not null check (role in ('owner', 'cashier', 'viewer')),
-  created_at  timestamptz not null default now(),
-  unique (shop_id, user_id)
-);
+-- Eslatma: `shop_users` va `profiles` jadvallari bu yerda ataylab yo'q.
+-- Ikkalasi ham ishlatilmaydigan qoldiq edi va 5-bosqichda olib tashlandi
+-- (sabablari `supabase/security_fixes.sql` da).
 
 -- ============================================================
 -- TRIGGER: customers.total_debt ni avtomatik yangilash
@@ -72,6 +64,10 @@ create or replace function public.sync_customer_total_debt()
 returns trigger
 language plpgsql
 security definer
+-- search_path qat'iy belgilanadi: security definer funksiya chaqiruvchining
+-- search_path'iga tayansa, u soxta `public` sxema yasab funksiyani o'z
+-- kodini bajarishga majburlashi mumkin.
+set search_path = public, pg_temp
 as $$
 declare
   target_customer_id uuid;
@@ -107,13 +103,13 @@ execute function public.sync_customer_total_debt();
 alter table public.shops      enable row level security;
 alter table public.customers  enable row level security;
 alter table public.debts      enable row level security;
-alter table public.shop_users enable row level security;
 
 -- Shop egasini tekshiruvchi yordamchi funksiya (performance uchun)
 create or replace function public.is_shop_owner(p_shop_id uuid)
 returns boolean
 language sql
 security definer stable
+set search_path = public, pg_temp
 as $$
   select exists (
     select 1 from public.shops
@@ -156,15 +152,18 @@ create policy "Owner: select debts"
   to authenticated
   using (public.is_shop_owner(shop_id));
 
+-- `created_by` audit izi: foydalanuvchi faqat o'z nomidan yozuv qo'sha oladi,
+-- aks holda yozuvni boshqa odam qilgandek ko'rsatish mumkin bo'lardi.
 create policy "Owner: insert debts"
   on public.debts for insert
   to authenticated
-  with check (public.is_shop_owner(shop_id));
+  with check (public.is_shop_owner(shop_id) and created_by = auth.uid());
 
 create policy "Owner: update debts"
   on public.debts for update
   to authenticated
-  using (public.is_shop_owner(shop_id));
+  using (public.is_shop_owner(shop_id))
+  with check (public.is_shop_owner(shop_id) and created_by = auth.uid());
 
 create policy "Owner: delete debts"
   on public.debts for delete

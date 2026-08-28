@@ -27,8 +27,8 @@ Noldan yozilmadi — mavjud `hisobim` (do'kon qarz daftari, Expo + Supabase) mon
 | 2 | Auth: SMS OTP → email + parol | ✅ tugadi |
 | 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ✅ tugadi |
 | 4 | Mobil: offline kesh + outbox + offline banner | ✅ tugadi |
-| 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ⬜ keyingi |
-| 6 | Testlar + GitHub Actions CI | ⬜ |
+| 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ✅ tugadi |
+| 6 | Testlar + GitHub Actions CI | ⬜ keyingi |
 | 7 | Deploy (Vercel + EAS), README, demo video | ⬜ |
 
 Har bosqich uchun avval `PROMPTS.md` ga prompt yoziladi, keyin shu prompt bajariladi.
@@ -118,11 +118,21 @@ Jadvallar: `shops` · `customers` · `debts` · `shop_users` · `profiles`. Hozi
 
 `supabase/seed.sql` — 18 mijoz va ~50 qarz/to'lov yozuvi bilan demo ma'lumot. Ro'yxatdan o'tib, do'kon yaratilgandan keyin ishga tushiriladi (u mavjud `shops` yozuvini topib ishlatadi).
 
-## Ochiq xavfsizlik kamchiliklari (5-bosqichda tuzatiladi)
+## 5-bosqich: xavfsizlik (tugadi)
 
-1. **`shop_users`** — RLS yoqilgan, lekin birorta policy yo'q, ya'ni jadval butunlay kirib bo'lmaydi. Migratsiyada "keyingi faza uchun scaffold" deb belgilangan. Olib tashlanadi.
-2. **`debts` insert policy** `created_by = auth.uid()` ni tekshirmaydi — foydalanuvchi boshqa odam nomidan yozuv qo'shishi mumkin.
-3. **`profiles` jadvali** bazada bor, lekin `migration.sql` da ham, kodda ham yo'q — migratsiya fayli bazadan drift qilgan. Olib tashlanadi yoki migratsiyaga qo'shiladi.
-4. **`npm audit`** 17 ta zaiflik ko'rsatdi (8 moderate, 9 high) — ko'rib chiqilmagan.
+O'zgarishlar `supabase/security_fixes.sql` da (sabablari bilan), `supabase/migration.sql` ham yangi holatga moslandi. Jonli bazaga qo'llandi.
 
-Tuzatilgani: `.gitignore` da oddiy `.env` yo'q edi (faqat `.env.development` va `.env*.local`) — 1-bosqichda qo'shildi.
+Tuzatilgani:
+
+1. **`shop_users` o'chirildi** — RLS yoqilgan, policy yo'q, kodda ishlatilmaydi.
+2. **`profiles` o'chirildi** — kodda yo'q edi va SELECT policy'si `using (true)` bo'lgan, ya'ni istalgan foydalanuvchi barcha `auth_email` qiymatlarini o'qiy olardi. Ro'yxatdagi "migratsiyadan drift" yozuvidan jiddiyroq muammo chiqdi.
+3. **`debts` policy** — insert va update'da `created_by = auth.uid()` majburiy qilindi (audit izi).
+4. **`search_path`** — ikkala `security definer` funksiyaga `public, pg_temp` qat'iy belgilandi.
+5. `.gitignore` da oddiy `.env` yo'q edi — 1-bosqichda qo'shilgan.
+
+**Ataylab qoldirilgani:**
+
+- **`npm audit` 17 zaiflik** — hammasi `image-size`, `postcss`, `uuid` dan keladi, uchalasi ham qurish vositalari (metro/xcode), ilova kodida emas. `npm audit fix` (force'siz) hech narsani o'zgartirmaydi, `--force` esa Expo 54 ni buzadi.
+- **Funksiyalarga EXECUTE huquqi** — advisor REST orqali chaqirilishidan ogohlantiradi, lekin `is_shop_owner` RLS policy ichida ishlatiladi; `revoke` qilib ko'rildi va darhol qaytarildi, chunki ilovani sindirishi mumkin. Ma'lumotni RLS himoyalaydi.
+- **GraphQL sxemada jadval nomlari ko'rinishi** — Supabase'ning odatiy holati, RLS ma'lumotni himoyalaydi.
+- **Leaked password protection o'chiq** — Supabase dashboard sozlamasi (Authentication → Password), kod bilan yoqilmaydi.

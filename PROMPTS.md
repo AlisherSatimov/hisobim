@@ -94,3 +94,22 @@ Muhim: outbox mantig'i `packages/shared` da bo'lsin, `apps/mobile` da emas — u
 Mavjud hooklar (`useCreateDebt`, `useCreateCustomer`) chaqiruv joyidan qaraganda o'zgarmasin — ekran kodi "offline bo'lsa navbatga qo'y" degan shartni bilmasin, buni ma'lumot qatlami hal qilsin.
 
 Yangi paket o'rnatishing kerak bo'ladi (`@tanstack/react-query-persist-client`, `@react-native-community/netinfo` va persister). Expo bilan mos versiyani tanla — `npx expo install` ishlat. Tugagach `npm run typecheck` toza o'tsin. Ilovani o'zing ishga tushirib sinama — men Expo'da sinab ko'raman. Push qilma.
+
+---
+
+## 5. Xavfsizlik tuzatishlari
+
+Bazadagi xavfsizlik kamchiliklarini tuzat. Bular 1-bosqichda kodni o'qiyotganda topilgan edi va HOLAT.md da ro'yxatga olingan; ular README'da "topildi va tuzatildi" deb yoziladi, shuning uchun har birining sababi tushunarli bo'lsin.
+
+Avval jonli bazani Supabase advisor'i bilan tekshir (`get_advisors`, security) — ro'yxatdagilardan tashqari yana nima borligini ko'r, chunki `supabase/migration.sql` bazadan drift qilgan.
+
+Ma'lum kamchiliklar:
+
+1. **`shop_users`** — RLS yoqilgan, lekin birorta policy yo'q. Bu jadval "keyingi faza uchun scaffold" deb qo'shilgan, hozir kodda umuman ishlatilmaydi, ya'ni hech kim kira olmaydigan bo'sh jadval turibdi. Olib tashlansin — ishlatilmaydigan jadval hujum yuzasi.
+2. **`debts` insert policy** faqat `is_shop_owner(shop_id)` ni tekshiradi, `created_by = auth.uid()` ni tekshirmaydi. Ya'ni foydalanuvchi boshqa odam nomidan yozuv qo'sha oladi — audit izi ishonchsiz bo'lib qoladi. `with check` ga `created_by = auth.uid()` qo'shilsin. `update` policy'da ham `created_by` o'zgartirib yuborilmasin.
+3. **`profiles` jadvali** bazada bor, lekin `migration.sql` da ham, kodda ham yo'q — migratsiya fayli bazadan ajralib ketgan. Ishlatilmasa olib tashlansin, ishlatilsa migratsiyaga qo'shilsin. Avval ichida ma'lumot bor-yo'qligini tekshir.
+4. **`npm audit`** 17 ta zaiflik ko'rsatadi (8 moderate, 9 high). Ko'rib chiq: qaysilari haqiqiy xavf, qaysilari faqat dev-bog'liqlikda. `npm audit fix --force` ni ko'r-ko'rona ishlatma — u Expo yoki Vite versiyasini buzishi mumkin. Nima tuzatilgani va nima ataylab qoldirilgani yozilsin.
+
+Migratsiya fayli va jonli baza bir-biriga mos bo'lishi kerak. `supabase/migration.sql` ni yangi holatga moslab yangila (u noldan qurish uchun yagona manba), o'zgarishlarni jonli bazaga ham qo'lla. **Jonli bazaga tegishdan oldin menga ayt** — nima o'zgarishini ko'rsat, keyin qo'llaymiz.
+
+Tugagach advisor'ni qayta ishga tushir va nima yopilgani, nima ochiq qolgani (va nega) ro'yxat qilib ber. Push qilma.
