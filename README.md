@@ -4,7 +4,7 @@ Do'kon qarz daftari — bitta tizim, ikki platforma: **mobil ilova** (sotuvchi q
 
 Ikkala klient ham bitta Supabase API'sidan, bitta umumiy kod qatlami (`packages/shared`) orqali ishlaydi.
 
-- **Jonli veb:** _(deploy qilingach qo'shiladi)_
+- **Jonli veb:** https://web-beta-orcin-36.vercel.app
 - **Mobil:** Expo Go orqali (`npm run mobile`)
 - **Promptlar:** [PROMPTS.md](PROMPTS.md) — ish qanday olib borilgani
 
