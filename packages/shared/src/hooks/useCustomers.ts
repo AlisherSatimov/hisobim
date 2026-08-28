@@ -6,6 +6,8 @@ import {
   updateCustomer,
   deleteCustomer,
 } from '../services/customer.service';
+import { getOnline } from '../network';
+import { enqueueCustomer } from '../outbox';
 import type { CreateCustomerPayload, Customer, UpdateCustomerPayload } from '../types';
 
 export const CUSTOMERS_KEY = (shopId: string) => ['customers', shopId] as const;
@@ -34,10 +36,20 @@ export function useCustomerById(id: string, shopId?: string) {
   });
 }
 
+/**
+ * Offline bo'lsa yozuv navbatga tushadi — chaqiruvchi ekran buni bilmaydi,
+ * shart shu yerda hal qilinadi.
+ */
 export function useCreateCustomer(shopId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateCustomerPayload) => createCustomer(payload),
+    mutationFn: async (payload: CreateCustomerPayload): Promise<Customer | null> => {
+      if (!getOnline()) {
+        enqueueCustomer(payload);
+        return null;
+      }
+      return createCustomer(payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY(shopId) });
       queryClient.invalidateQueries({ queryKey: ['reports'] });

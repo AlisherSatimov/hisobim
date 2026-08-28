@@ -4,18 +4,33 @@ import '../init';
 
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, onlineManager } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { StatusBar } from 'expo-status-bar';
-import { supabase, useAuthStore } from '@hisobim/shared';
+import { supabase, useAuthStore, setOnline, startOutboxSync } from '@hisobim/shared';
+import OfflineBanner from '../components/OfflineBanner';
+
+const CACHE_TIME = 1000 * 60 * 60 * 24 * 7; // 7 kun
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 0,
+      // Internetsiz ochilganda oxirgi holat ko'rinishi uchun kesh
+      // yetarlicha uzoq saqlanadi.
+      staleTime: 1000 * 60 * 5,
+      gcTime: CACHE_TIME,
     },
   },
+});
+
+const persister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  key: 'hisobim-query-cache',
 });
 
 const hisobimTheme = {
@@ -30,6 +45,18 @@ const hisobimTheme = {
 
 export default function RootLayout() {
   const { setSession } = useAuthStore();
+
+  // Tarmoq holati: netinfo -> React Query va shared network qatlami.
+  useEffect(() => {
+    return NetInfo.addEventListener((state) => {
+      const online = state.isConnected === true && state.isInternetReachable !== false;
+      onlineManager.setOnline(online);
+      setOnline(online);
+    });
+  }, []);
+
+  // Aloqa qaytganda navbatdagi yozuvlar yuboriladi.
+  useEffect(() => startOutboxSync(queryClient), []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -46,9 +73,13 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister, maxAge: CACHE_TIME }}
+    >
       <PaperProvider theme={hisobimTheme}>
         <StatusBar style="dark" />
+        <OfflineBanner />
         <Stack screenOptions={{
           headerShown: false,
           headerStyle: { backgroundColor: 'white' },
@@ -66,6 +97,6 @@ export default function RootLayout() {
           <Stack.Screen name="customer/edit" options={{ headerShown: true }} />
         </Stack>
       </PaperProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 }

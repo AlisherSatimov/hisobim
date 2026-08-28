@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchDebtsByCustomer, createDebt, deleteDebt } from '../services/debt.service';
 import { CUSTOMER_KEY } from './useCustomers';
-import type { CreateDebtPayload } from '../types';
+import { getOnline } from '../network';
+import { enqueueDebt } from '../outbox';
+import type { CreateDebtPayload, Debt } from '../types';
 
 export const DEBTS_KEY = (customerId: string) => ['debts', customerId] as const;
 
@@ -17,7 +19,14 @@ export function useDebts(customerId: string) {
 export function useCreateDebt(customerId: string, createdBy: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: CreateDebtPayload) => createDebt(payload, createdBy),
+    // Offline bo'lsa yozuv navbatga tushadi — ekran kodi buni bilmaydi.
+    mutationFn: async (payload: CreateDebtPayload): Promise<Debt | null> => {
+      if (!getOnline()) {
+        enqueueDebt(payload, createdBy);
+        return null;
+      }
+      return createDebt(payload, createdBy);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DEBTS_KEY(customerId) });
       queryClient.invalidateQueries({ queryKey: CUSTOMER_KEY(customerId) });

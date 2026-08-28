@@ -8,6 +8,7 @@
  * bajarilishi shart.
  */
 import { initHisobim } from '@hisobim/shared/init';
+import { setOnline } from '@hisobim/shared/network';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -26,3 +27,8 @@ initHisobim({
   // Vebda email tasdiqlash havolasi URL orqali sessiya qaytaradi.
   detectSessionInUrl: true,
 });
+
+// Tarmoq holatini shared qatlamga uzatish (mobilda buni netinfo qiladi).
+setOnline(navigator.onLine);
+window.addEventListener('online', () => setOnline(true));
+window.addEventListener('offline', () => setOnline(false));

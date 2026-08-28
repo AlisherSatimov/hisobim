@@ -26,8 +26,8 @@ Noldan yozilmadi — mavjud `hisobim` (do'kon qarz daftari, Expo + Supabase) mon
 | 1 | Monorepo + `@hisobim/shared` paketi | ✅ tugadi (`24341ab`) |
 | 2 | Auth: SMS OTP → email + parol | ✅ tugadi |
 | 3 | Veb-ilova (login, dashboard, mijozlar, mijoz detali) | ✅ tugadi |
-| 4 | Mobil: offline kesh + outbox + offline banner | ⬜ keyingi |
-| 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ⬜ |
+| 4 | Mobil: offline kesh + outbox + offline banner | ✅ tugadi |
+| 5 | Xavfsizlik tuzatishlari (pastda ro'yxat) | ⬜ keyingi |
 | 6 | Testlar + GitHub Actions CI | ⬜ |
 | 7 | Deploy (Vercel + EAS), README, demo video | ⬜ |
 
@@ -73,6 +73,20 @@ Yo'l-yo'lakay topilgan: `fetchReports` `debts` jadvalini so'rab, natijasini ishl
 Ikki joy kelishuv bo'yicha mobil bilan bir xil: to'lov manfiy summa, qarz musbat; `initHisobim()` `main.tsx` ning eng birinchi importi.
 
 **Ochiq:** mijozlar jadvalidagi "Qo'shilgan" ustuni — "oxirgi yozuv sanasi" ko'rsatilishi kerak edi, lekin `Customer` tipida bu maydon yo'q va uni olish shared'ga yangi so'rov qo'shishni talab qiladi.
+
+## 4-bosqichda nima qilindi
+
+Mobil offline rejim uch qismdan: kesh saqlanadi (`PersistQueryClientProvider` + AsyncStorage persister, kesh 7 kun, `staleTime` 5 daqiqa), yuborilmagan yozuvlar navbati, va barcha ekranlar ustidagi banner.
+
+Outbox `packages/shared` da (`outbox.ts` + `stores/outbox.store.ts`) — platformaga bog'liq emas, veb ham ishlata oladi. Tarmoq holati shared'ga tashqaridan uzatiladi (`network.ts`): mobilda netinfo, vebda `online`/`offline` hodisalari. Shared hech qachon netinfo'ni import qilmaydi.
+
+`useCreateCustomer` / `useCreateDebt` offline bo'lsa yozuvni navbatga qo'yib `null` qaytaradi — chaqiruvchi ekranlar o'zgarmadi.
+
+**Xato ajratish (muhim):** Supabase xatosida `code` bo'lsa (42501 RLS, 23505 takror) — server rad etgan, qayta urinilmaydi, element "xato" holatiga o'tadi. Kodsiz xato tarmoq uzilishi deb qaraladi va navbatda qoladi. Busiz navbat cheksiz aylanardi.
+
+Yo'l-yo'lakay: veb `init.ts` ga ham `setOnline` ulandi — bo'lmasa shared qatlam vebda doim "online" deb hisoblardi.
+
+**Ochiq:** navbatdagi yozuvlar ro'yxatlarda ko'rinmaydi, faqat bannerdagi sonda (optimistik ko'rsatish React Query keshiga soxta yozuv qo'shishni talab qiladi).
 
 ## Boshqa mashinada boshlash
 
